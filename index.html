@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Web & Terminal Fundamentals</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0A0A0F;
+    --surface: #14141C;
+    --card: #1C1C28;
+    --border: #2A2A3C;
+    --text: #F0EEE8;
+    --muted: #8888A0;
+    --green: #7FD99B;
+    --amber: #C8A87A;
+    --blue: #7EB8F7;
+    --red: #F07070;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
+  }
+
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; display: flex; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 240px; flex-shrink: 0; background: var(--surface);
+    border-right: 1px solid var(--border); padding: 28px 0;
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    display: flex; flex-direction: column;
+  }
+  .sidebar-logo { padding: 0 20px 24px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .sidebar-logo .tag { font-family: var(--mono); font-size: 10px; color: var(--green); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px; }
+  .sidebar-logo h1 { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.4; }
+
+  .layer-label { font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; padding: 8px 20px 4px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 20px; cursor: pointer; border-left: 2px solid transparent; transition: all .15s; text-decoration: none; }
+  .nav-item:hover { background: var(--card); color: var(--text); }
+  .nav-item.active { border-left-color: var(--green); background: rgba(127,217,155,.07); }
+  .nav-item .nav-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); flex-shrink: 0; transition: background .15s; }
+  .nav-item.active .nav-dot { background: var(--green); }
+  .nav-item .nav-text { font-family: var(--mono); font-size: 11px; color: var(--muted); transition: color .15s; }
+  .nav-item.active .nav-text, .nav-item:hover .nav-text { color: var(--text); }
+  .nav-module { font-family: var(--mono); font-size: 10px; color: var(--muted); padding: 12px 20px 2px; text-transform: uppercase; letter-spacing: .06em; }
+
+  /* MAIN */
+  .main { flex: 1; padding: 48px 56px; max-width: 860px; }
+  .page-header { margin-bottom: 48px; padding-bottom: 32px; border-bottom: 1px solid var(--border); }
+  .page-header .eyebrow { font-family: var(--mono); font-size: 11px; color: var(--green); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 12px; }
+  .page-header h2 { font-family: var(--mono); font-size: 26px; font-weight: 700; line-height: 1.3; margin-bottom: 12px; }
+  .page-header p { font-size: 14px; color: var(--muted); line-height: 1.7; max-width: 540px; }
+
+  /* LAYER SECTION */
+  .layer-section { margin-bottom: 56px; }
+  .layer-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+  .layer-badge { font-family: var(--mono); font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: .08em; }
+  .layer-badge.l1 { background: rgba(127,217,155,.12); color: var(--green); border: 1px solid rgba(127,217,155,.25); }
+  .layer-badge.l2 { background: rgba(126,184,247,.1); color: var(--blue); border: 1px solid rgba(126,184,247,.2); }
+  .layer-title { font-family: var(--mono); font-size: 14px; font-weight: 700; }
+  .layer-desc { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; padding-left: 2px; }
+
+  /* MODULE */
+  .module { margin-bottom: 32px; }
+  .module-label { font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .module-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* LESSON CARD */
+  .lesson { background: var(--card); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+  .lesson-toggle { display: flex; align-items: center; gap: 12px; padding: 16px 20px; cursor: pointer; user-select: none; transition: background .15s; }
+  .lesson-toggle:hover { background: rgba(255,255,255,.03); }
+  .lesson-num { font-family: var(--mono); font-size: 10px; color: var(--green); width: 24px; flex-shrink: 0; }
+  .lesson-info { flex: 1; }
+  .lesson-title { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+  .lesson-type { font-size: 11px; color: var(--muted); }
+  .lesson-chevron { font-size: 11px; color: var(--muted); transition: transform .2s; }
+  .lesson.open .lesson-chevron { transform: rotate(180deg); }
+  .lesson-body { display: none; border-top: 1px solid var(--border); padding: 20px; }
+  .lesson.open .lesson-body { display: block; }
+
+  /* LESSON CONTENT */
+  .analogy-box { background: rgba(200,168,122,.08); border-left: 2px solid var(--amber); border-radius: 0 6px 6px 0; padding: 12px 14px; margin-bottom: 18px; font-size: 13px; color: var(--amber); line-height: 1.6; font-style: italic; }
+  .analogy-box span { font-style: normal; font-family: var(--mono); font-size: 10px; display: block; margin-bottom: 4px; opacity: .7; text-transform: uppercase; letter-spacing: .06em; }
+
+  .section-label { font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin: 16px 0 8px; }
+  .concept-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .concept-list li { display: flex; gap: 10px; font-size: 13px; line-height: 1.6; color: #D0CEC8; }
+  .concept-list li::before { content: '›'; font-family: var(--mono); color: var(--green); font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+  .concept-list code { font-family: var(--mono); font-size: 12px; background: rgba(127,217,155,.1); color: var(--green); padding: 1px 5px; border-radius: 3px; }
+
+  .skip-box { border: 1px dashed var(--border); border-radius: 6px; padding: 10px 14px; margin-top: 16px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .skip-box strong { font-family: var(--mono); font-size: 10px; color: var(--muted); display: block; margin-bottom: 3px; text-transform: uppercase; letter-spacing: .06em; }
+
+  .sources { margin-top: 16px; display: flex; flex-direction: column; gap: 5px; }
+  .sources a { font-size: 12px; color: var(--blue); text-decoration: none; display: flex; align-items: center; gap: 6px; opacity: .8; transition: opacity .15s; }
+  .sources a:hover { opacity: 1; }
+  .sources a::before { content: '↗'; font-family: var(--mono); font-size: 11px; }
+
+  /* DIAGRAMS */
+  .diagram { margin: 18px 0; background: #0E0E18; border: 1px solid var(--border); border-radius: 8px; padding: 20px; overflow: hidden; }
+  .diagram-label { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-bottom: 14px; text-transform: uppercase; letter-spacing: .06em; }
+  .diagram svg { width: 100%; display: block; }
+
+  /* code block */
+  pre { background: #0E0E18; border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px; font-family: var(--mono); font-size: 12px; color: #C0C8C0; line-height: 1.7; overflow-x: auto; margin: 14px 0; }
+  pre .c { color: var(--muted); }
+  pre .k { color: var(--blue); }
+  pre .s { color: var(--amber); }
+  pre .g { color: var(--green); }
+
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="tag">Prerequisite · DevOps</div>
+    <h1>Web & Terminal<br>Fundamentals</h1>
+  </div>
+
+  <div class="layer-label">Lớp 1 — Bắt buộc</div>
+
+  <div class="nav-module">A · Terminal</div>
+  <a class="nav-item active" onclick="scrollTo('l1a1')"><div class="nav-dot"></div><span class="nav-text">Terminal là gì?</span></a>
+  <a class="nav-item" onclick="scrollTo('l1a2')"><div class="nav-dot"></div><span class="nav-text">Lệnh hay dùng nhất</span></a>
+
+  <div class="nav-module">B · Cách web hoạt động</div>
+  <a class="nav-item" onclick="scrollTo('l1b1')"><div class="nav-dot"></div><span class="nav-text">Client, Server & HTTP</span></a>
+  <a class="nav-item" onclick="scrollTo('l1b2')"><div class="nav-dot"></div><span class="nav-text">URL, Domain & DNS</span></a>
+
+  <div class="nav-module">C · JS & Node.js</div>
+  <a class="nav-item" onclick="scrollTo('l1c1')"><div class="nav-dot"></div><span class="nav-text">Node.js là gì?</span></a>
+  <a class="nav-item" onclick="scrollTo('l1c2')"><div class="nav-dot"></div><span class="nav-text">package.json là gì?</span></a>
+
+  <div class="layer-label" style="margin-top:16px">Lớp 2 — Nâng cao</div>
+
+  <div class="nav-module">D · Networking</div>
+  <a class="nav-item" onclick="scrollTo('l2d1')"><div class="nav-dot"></div><span class="nav-text">Domain khi deploy</span></a>
+  <a class="nav-item" onclick="scrollTo('l2d2')"><div class="nav-dot"></div><span class="nav-text">Process & Runtime</span></a>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="page-header">
+    <div class="eyebrow">Nền tảng trước DevOps</div>
+    <h2>Web & Terminal<br>Fundamentals</h2>
+    <p>Những kiến thức này không phải DevOps — nhưng thiếu chúng thì học DevOps sẽ liên tục bị "à cái này nghĩa là sao". Học lớp 1 trước, lớp 2 học song song khi gặp.</p>
+  </div>
+
+  <!-- LỚP 1 -->
+  <div class="layer-section">
+    <div class="layer-header">
+      <div class="layer-badge l1">Lớp 1</div>
+      <div class="layer-title">Gần như bắt buộc</div>
+    </div>
+    <p class="layer-desc">Không có những thứ này, bạn sẽ bị stuck ngay từ bước đầu tiên khi dùng Claude Code, Git, hay Vercel.</p>
+
+    <!-- MODULE A -->
+    <div class="module">
+      <div class="module-label">Module A — Terminal & Command Line</div>
+
+      <!-- A1 -->
+      <div class="lesson" id="l1a1">
+        <div class="lesson-toggle" onclick="toggle(this)">
+          <div class="lesson-num">A1</div>
+          <div class="lesson-info">
+            <div class="lesson-title">Terminal là gì và tại sao cần dùng?</div>
+            <div class="lesson-type">Khái niệm nền</div>
+          </div>
+          <div class="lesson-chevron">▼</div>
+        </div>
+        <div class="lesson-body">
+          <div class="analogy-box"><span>Analogy cho designer</span>Terminal như Figma mà không có GUI — thay vì click vào nút, bạn gõ tên nút. Chậm hơn lúc đầu, nhưng nhanh hơn nhiều khi đã quen và có thể tự động hóa mọi thứ.</div>
+
+          <div class="diagram">
+            <div class="diagram-label">Sơ đồ — GUI vs CLI</div>
+            <svg viewBox="0 0 700 160" xmlns="http://www.w3.org/2000/svg">
+              <rect x="30" y="20" width="280" height="120" rx="8" fill="#1C1C28" stroke="#2A2A3C" stroke-width="1"/>
+              <text x="50" y="46" font-family="JetBrains Mono" font-size="10" fill="#8888A0">FIGMA (GUI)</text>
+              <rect x="50" y="56" width="100" height="28" rx="5" fill="#7FD99B" opacity=".15" stroke="#7FD99B" stroke-width="1"/>
+              <text x="100" y="74" text-anchor="middle" font-family="Inter" font-size="11" fill="#7FD99B">Export PNG</text>
+              <rect x="165" y="56" width="100" height="28" rx="5" fill="#2A2A3C"/>
+              <text x="215" y="74" text-anchor="middle" font-family="Inter" font-size="11" fill="#8888A0">Share</text>
+              <rect x="50" y="96" width="100" height="28" rx="5" fill="#2A2A3C"/>
+              <text x="100" y="114" text-anchor="middle" font-family="Inter" font-size="11" fill="#8888A0">Move to</text>
+              <rect x="165" y="96" width="100" height="28" rx="5" fill="#2A2A3C"/>
+              <text x="215" y="114" text-anchor="middle" font-family="Inter" font-size="11" fill="#8888A0">Duplicate</text>
+              <text x="170" y="90" font-family="JetBrains Mono" font-size="20" fill="#2A2A3C" text-anchor="middle">↔</text>
+
+              <rect x="380" y="20" width="290" height="120" rx="8" fill="#0E0E18" stroke="#2A2A3C" stroke-width="1"/>
+              <text x="400" y="46" font-family="JetBrains Mono" font-size="10" fill="#8888A0">TERMINAL (CLI)</text>
+              <text x="400" y="70" font-family="JetBrains Mono" font-size="12" fill="#7FD99B">$ git push origin main</text>
+              <text x="400" y="90" font-family="JetBrains Mono" font-size="12" fill="#7FD99B">$ npm install</text>
+              <text x="400" y="110" font-family="JetBrains Mono" font-size="12" fill="#7FD99B">$ npm run dev</text>
+              <text x="400" y="130" font-family="JetBrains Mono" font-size="12" fill="#7FD99B">$ <tspan fill="#3B3B4F">_</tspan></text>
+
+              <text x="350" y="90" text-anchor="middle" font-family="JetBrains Mono" font-size="18" fill="#3B3B4F">vs</text>
+            </svg>
+          </div>
+
+          <div class="section-label">Nội dung chính</div>
+          <ul class="concept-list">
+            <li>Terminal (CLI) = giao diện text để ra lệnh trực tiếp cho máy tính — không dùng chuột.</li>
+            <li><code>Shell</code> = chương trình đọc lệnh bạn gõ và chuyển cho OS thực thi. macOS/Linux dùng <code>zsh</code> hoặc <code>bash</code>.</li>
+            <li>Vibe coder cần terminal vì: Claude Code chạy trong terminal, Git dùng terminal, <code>npm install</code> cần terminal.</li>
+            <li>Cấu trúc lệnh: <code>git commit -m "message"</code> → <code>git</code> là lệnh, <code>commit</code> là hành động, <code>-m</code> là tùy chọn, <code>"message"</code> là đối số.</li>
+            <li>Khi thấy error đỏ trong terminal: đọc dòng cuối cùng trước — thường là dòng quan trọng nhất.</li>
+          </ul>
+
+          <div class="skip-box"><strong>Bỏ qua được</strong>Shell scripting, viết alias, cấu hình <code>.zshrc</code> sâu.</div>
+          <div class="sources">
+            <a href="https://www.freecodecamp.org/news/command-line-for-beginners/" target="_blank">freeCodeCamp — Command Line for Beginners</a>
+            <a href="https://developer.mozilla.org/en-US/docs/Learn_web_development/Getting_started/Environment_setup/Command_line" target="_blank">MDN — Command line crash course</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- A2 -->
+      <div class="lesson" id="l1a2">
+        <div class="lesson-toggle" onclick="toggle(this)">
+          <div class="lesson-num">A2</div>
+          <div class="lesson-info">
+            <div class="lesson-title">Các lệnh terminal hay dùng nhất</div>
+            <div class="lesson-type">Từ điển thực hành</div>
+          </div>
+          <div class="lesson-chevron">▼</div>
+        </div>
+        <div class="lesson-body">
+          <div class="analogy-box"><span>Analogy cho designer</span>Đây là bộ shortcuts Figma tối thiểu — Ctrl+Z, Ctrl+C, Ctrl+G. Không cần nhớ hết, chỉ cần biết đủ để không bị đứng hình.</div>
+
+          <div class="diagram">
+            <div class="diagram-label">Cheatsheet — Lệnh cơ bản</div>
+            <svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg">
+              <rect x="20" y="10" width="660" height="200" rx="8" fill="#0E0E18" stroke="#2A2A3C" stroke-width="1"/>
+              <!-- rows -->
+              <rect x="20" y="10" width="660" height="30" rx="8" fill="#14141C"/>
+              <rect x="20" y="36" width="660" height="4" fill="#14141C"/>
+              <text x="40" y="30" font-family="JetBrains Mono" font-size="10" fill="#8888A0">LỆNH</text>
+              <text x="200" y="30" font-family="JetBrains Mono" font-size="10" fill="#8888A0">Ý NGHĨA</text>
+              <text x="460" y="30" font-family="JetBrains Mono" font-size="10" fill="#8888A0">VÍ DỤ</text>
+
+              <text x="40" y="62" font-family="JetBrains Mono" font-size="12" fill="#7FD99B">pwd</text>
+              <text x="200" y="62" font-family="Inter" font-size="12" fill="#D0CEC8">Xem vị trí hiện tại</text>
+              <text x="460" y="62" font-family="JetBrains Mono" font-size="11" fill="#8888A0">→ /Users/bee/studio</text>
+
+              <text x="40" y="86" font-family="JetBrains Mono" font-size="12" fill="#7FD99B">ls</text>
+              <text x="200" y="86" font-family="Inter" font-size="12" fill="#D0CEC8">Liệt kê file/folder</text>
+              <text x="460" y="86" font-family="JetBrains Mono" font-size="11" fill="#8888A0">ls -a (hiện file ẩn)</text>
+
+              <text x="40" y="110" font-family="JetBrains Mono" font-size="12" fill="#7FD99B">cd</text>
+              <text x="200" y="110" font-family="Inter" font-size="12" fill="#D0CEC8">Di chuyển vào folder</text>
+              <text x="460" y="110" font-family="JetBrains Mono" font-size="11" fill="#8888A0">cd ..  (lên 1 cấp)</text>
+
+              <text x="40" y="134" font-family="JetBrains Mono" font-size="12" fill="#7FD99B">mkdir</text>
+              <text x="200" y="134" font-family="Inter" font-size="12" fill="#D0CEC8">Tạo folder mới</text>
+              <text x="460" y="134" font-family="JetBrains Mono" font-size="11" fill="#8888A0">mkdir my-project</text>
+
+              <text x="40" y="158" font-family="JetBrains Mono" font-size="12" fill="#7FD99B">cat</text>
+              <text x="200" y="158" font-family="Inter" font-size="12" fill="#D0CEC8">Xem nội dung file</text>
+              <text x="460" y="158" font-family="JetBrains Mono" font-size="11" fill="#8888A0">cat .env</text>
+
+              <text x="40" y="182" font-family="JetBrains Mono" font-size="12" fill="#C8A87A">Ctrl+C</text>
+              <text x="200" y="182" font-family="Inter" font-size="12" fill="#D0CEC8">Dừng lệnh đang chạy</text>
+              <text x="460" y="182" font-family="JetBrains Mono" font-size="11" fill="#C8A87A">⚡ Quan trọng nhất</text>
+
+              <line x1="20" y1="40" x2="680" y2="40" stroke="#2A2A3C" stroke-width="1"/>
+              <line x1="185" y1="40" x2="185" y2="210" stroke="#2A2A3C" stroke-width="1"/>
+              <line x1="445" y1="40" x2="445" y2="210" stroke="#2A2A3C" stroke-width="1"/>
+              <line x1="20" y1="68" x2="680" y2="68" stroke="#1C1C28" stroke-width="1"/>
+              <line x1="20" y1="92" x2="680" y2="92" stroke="#1C1C28" stroke-width="1"/>
+              <line x1="20" y1="116" x2="680" y2="116" stroke="#1C1C28" stroke-width="1"/>
+              <line x1="20" y1="140" x2="680" y2="140" stroke="#1C1C28" stroke-width="1"/>
+              <line x1="20" y1="164" x2="680" y2="164" stroke="#1C1C28" stroke-width="1"/>
+            </svg>
+          </div>
+
+          <div class="section-label">Mẹo thực tế</div>
+          <ul class="concept-list">
+            <li>Gõ vài ký tự rồi nhấn <code>Tab</code> — terminal tự hoàn thành tên file/folder.</li>
+            <li>Mũi tên <code>↑</code> để lấy lại lệnh vừa gõ — không cần gõ lại.</li>
+            <li><code>clear</code> xóa màn hình terminal cho sạch (history vẫn còn).</li>
+          </ul>
+
+          <div class="skip-box"><strong>Bỏ qua được</strong>grep, awk, sed, pipe operator — để khi cần mới học.</div>
+          <div class="sources">
+            <a href="https://www.geeksforgeeks.org/basic-linux-commands/" target="_blank">GeeksforGeeks — 25 Basic Linux Commands 2025</a>
+            <a href="https://ubuntu.com/tutorials/command-line-for-beginners" target="_blank">Ubuntu — The Linux command line for beginners</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULE B -->
+    <div class="module">
+      <div class="module-label">Module B — Cách Web Hoạt Động</div>
+
+      <!-- B1 -->
+      <div class="lesson" id="l1b1">
+        <div class="lesson-toggle" onclick="toggle(this)">
+          <div class="lesson-num">B1</div>
+          <div class="lesson-info">
+            <div class="lesson-title">Client, Server và HTTP</div>
+            <div class="lesson-type">Khái niệm nền</div>
+          </div>
+          <div class="lesson-chevron">▼</div>
+        </div>
+        <div class="lesson-body">
+          <div class="analogy-box"><span>Analogy cho designer</span>Client như khách gọi món (gửi request). Server như nhà bếp (xử lý và trả response). HTTP là ngôn ngữ chung để gọi món — cả hai phải dùng đúng format mới hiểu nhau.</div>
+
+          <div class="diagram">
+            <div class="diagram-label">Sơ đồ — HTTP Request / Response Cycle</div>
+            <svg viewBox="0 0 700 170" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                  <path d="M1 1L9 5L1 9" fill="none" stroke="#7FD99B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </marker>
+                <marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                  <path d="M1 1L9 5L1 9" fill="none" stroke="#C8A87A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </marker>
+              </defs>
+
+              <!-- Client -->
+              <rect x="30" y="40" width="160" height="90" rx="8" fill="#1C1C28" stroke="#2A2A3C" stroke-width="1"/>
+              <text x="110" y="66" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#8888A0">CLIENT</text>
+              <text x="110" y="86" text-anchor="middle" font-family="Inter" font-size="13" fill="#F0EEE8">Browser</text>
+              <text x="110" y="106" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#7FD99B">chrome://</text>
+
+              <!-- HTTP Cloud -->
+              <rect x="250" y="50" width="200" height="70" rx="8" fill="#0E0E18" stroke="#3B3B4F" stroke-width="1" stroke-dasharray="4 3"/>
+              <text x="350" y="78" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#8888A0">HTTP / HTTPS</text>
+              <text x="350" y="98" text-anchor="middle" font-family="Inter" font-size="12" fill="#8888A0">Internet</text>
+
+              <!-- Server -->
+              <rect x="510" y="40" width="160" height="90" rx="8" fill="#1C1C28" stroke="#2A2A3C" stroke-width="1"/>
+              <text x="590" y="66" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#8888A0">SERVER</text>
+              <text x="590" y="86" text-anchor="middle" font-family="Inter" font-size="13" fill="#F0EEE8">Vercel</text>
+              <text x="590" y="106" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#7FD99B">myapp.com</text>
+
+              <!-- Request arrow -->
+              <line x1="192" y1="72" x2="248" y2="72" stroke="#7FD99B" stroke-width="1.5" marker-end="url(#arr)"/>
+              <line x1="452" y1="72" x2="508" y2="72" stroke="#7FD99B" stroke-width="1.5" marker-end="url(#arr)"/>
+              <text x="220" y="64" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#7FD99B">GET</text>
+              <text x="480" y="64" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#7FD99B">request</text>
+
+              <!-- Response arrow -->
+              <line x1="508" y1="98" x2="452" y2="98" stroke="#C8A87A" stroke-width="1.5" marker-end="url(#arr2)"/>
+              <line x1="248" y1="98" x2="192" y2="98" stroke="#C8A87A" stroke-width="1.5" marker-end="url(#arr2)"/>
+              <text x="480" y="115" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#C8A87A">200 OK</text>
+              <text x="220" y="115" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#C8A87A">HTML+CSS</text>
+
+              <text x="350" y="155" text-anchor="middle" font-family="Inter" font-size="12" fill="#8888A0">Mỗi lần bạn gõ URL + Enter = 1 vòng request → response</text>
+            </svg>
+          </div>
+
+          <div class="section-label">Nội dung chính</div>
+          <ul class="concept-list">
+            <li><strong>Client</strong> = thiết bị/phần mềm gửi yêu cầu — thường là trình duyệt của bạn.</li>
+            <li><strong>Server</strong> = máy tính nhận yêu cầu, xử lý, và trả kết quả về.</li>
+            <li><strong>HTTP</strong> = tập quy tắc định dạng request và response. <strong>HTTPS</strong> = HTTP + mã hóa SSL.</li>
+            <li>Request có <strong>method</strong>: <code>GET</code> (lấy dữ liệu), <code>POST</code> (gửi dữ liệu), <code>PUT</code>/<code>DELETE</code> (sửa/xóa).</li>
+            <li>Response trả về <strong>status code</strong>: <code>200</code> = OK, <code>404</code> = không tìm thấy, <code>500</code> = lỗi server.</li>
+          </ul>
+
+          <div class="sources">
+            <a href="https://www.designgurus.io/answers/detail/what-is-http-and-how-do-http-requests-and-responses-work-in-web-architecture" target="_blank">DesignGurus — What is HTTP and how do HTTP requests work?</a>
+            <a href="https://www.fastly.com/learning/http-requests-explained" target="_blank">Fastly — HTTP Requests Explained</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- B2 -->
+      <div class="lesson" id="l1b2">
+        <div class="lesson-toggle" onclick="toggle(this)">
+          <div class="lesson-num">B2</div>
+          <div class="lesson-info">
+            <div class="lesson-title">URL, Domain và DNS</div>
+            <div class="lesson-type">Khái niệm nền</div>
+          </div>
+          <div class="lesson-chevron">▼</div>
+        </div>
+        <div class="lesson-body">
+          <div class="analogy-box"><span>Analogy cho designer</span>Domain như tên thương hiệu (nike.com). IP address như địa chỉ nhà thật (104.26.2.33). DNS như danh bạ điện thoại — bạn gõ tên, nó tra ra số.</div>
+
+          <div class="diagram">
+            <div class="diagram-label">Giải phẫu một URL</div>
+            <svg viewBox="0 0 700 130" xmlns="http://www.w3.org/2000/svg">
+              <rect x="20" y="20" width="660" height="50" rx="6" fill="#0E0E18" stroke="#2A2A3C" stroke-width="1"/>
+              <!-- URL text -->
+              <text x="40" y="52" font-family="JetBrains Mono" font-size="15">
+                <tspan fill="#7EB8F7">https://</tspan><tspan fill="#7FD99B">mysite.com</tspan><tspan fill="#F0EEE8">/about</tspan><tspan fill="#C8A87A">?ref=header</tspan>
+              </text>
+              <!-- Labels -->
+              <line x1="76" y1="70" x2="76" y2="90" stroke="#7EB8F7" stroke-width="1" stroke-dasharray="2 2"/>
+              <text x="76" y="105" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#7EB8F7">protocol</text>
+
+              <line x1="185" y1="70" x2="185" y2="90" stroke="#7FD99B" stroke-width="1" stroke-dasharray="2 2"/>
+              <text x="185" y="105" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#7FD99B">domain</text>
+
+              <line x1="310" y1="70" x2="310" y2="90" stroke="#F0EEE8" stroke-width="1" stroke-dasharray="2 2"/>
+              <text x="310" y="105" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8888A0">path</text>
+
+              <line x1="460" y1="70" x2="460" y2="90" stroke="#C8A87A" stroke-width="1" stroke-dasharray="2 2"/>
+              <text x="460" y="105" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#C8A87A">query string</text>
+            </svg>
+          </div>
+
+          <div class="diagram">
+            <div class="diagram-label">DNS lookup — Từ tên domain đến IP</div>
+            <svg viewBox="0 0 700 100" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arr3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                  <path d="M1 1L9 5L1 9" fill="none" stroke="#8888A0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </marker>
+              </defs>
+              <rect x="20" y="30" width="130" height="40" rx="6" fill="#1C1C28" stroke="#2A2A3C" stroke-width="1"/>
+              <text x="85" y="47" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#F0EEE8">mysite.com</text>
+              <text x="85" y="63" text-anchor="middle" font-family="Inter" font-size="10" fill="#8888A0">bạn gõ</text>
+
+              <line x1="152" y1="50" x2="198" y2="50" stroke="#8888A0" stroke-width="1" marker-end="url(#arr3)"/>
+
+              <rect x="200" y="30" width="130" height="40" rx="6" fill="#1C1C28" stroke="#2A2A3C" stroke-width="1"/>
+              <text x="265" y="47" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#7FD99B">DNS Lookup</text>
+              <text x="265" y="63" text-anchor="middle" font-family="Inter" font-size="10" fill="#8888A0">tra danh bạ</text>
+
+              <line x1="332" y1="50" x2="378" y2="50" stroke="#8888A0" stroke-width="1" marker-end="url(#arr3)"/>
+
+              <rect x="380" y="30" width="140" height="40" rx="6" fill="#1C1C28" stroke="#2A2A3C" stroke-width="1"/>
+              <text x="450" y="47" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#C8A87A">104.26.2.33</text>
+              <text x="450" y="63" text-anchor="middle" font-family="Inter" font-size="10" fill="#8888A0">IP thật</text>
+
+              <line x1="522" y1="50" x2="568" y2="50" stroke="#8888A0" stroke-width="1" marker-end="url(#arr3)"/>
+
+              <rect x="570" y="30" width="110" height="40" rx="6" fill="#1C1C28" stroke="#7FD99B" stroke-width="1"/>
+              <text x="625" y="47" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#7FD99B">Vercel</text>
+              <text x="625" y="63" text-anchor="middle" font-family="Inter" font-size="10" fill="#8888A0">server thật</text>
+            </svg>
+          </div>
+
+          <div class="section-label">Nội dung chính</div>
+          <ul class="concept-list">
+            <li><code>localhost</code> = <code>127.0.0.1</code> = chính máy bạn. Dev server chạy ở đây trước khi deploy.</li>
+            <li><strong>Port</strong> = "cửa" phân biệt service. <code>:3000</code>, <code>:8080</code> là port. HTTP mặc định dùng <code>80</code>, HTTPS dùng <code>443</code>.</li>
+            <li>Khi deploy lên Vercel + trỏ domain: bạn đang thêm DNS record trỏ tên → IP của Vercel.</li>
+            <li>DNS propagation = thời gian thay đổi lan ra toàn cầu — thường 5 phút đến 48 giờ.</li>
+          </ul>
+
+          <div class="skip-box"><strong>Bỏ qua được</strong>DNS propagation chi tiết, TTL, nameserver tự quản lý.</div>
+          <div class="sources">
+            <a href="https://www.freecodecamp.org/news/what-is-localhost/" target="_blank">freeCodeCamp — What is Localhost?</a>
+            <a href="https://localtonet.com/blog/what-is-localhost" target="_blank">Localtonet — What is localhost? Full Guide</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULE C -->
+    <div class="module">
+      <div class="module-label">Module C — JavaScript & Node.js ở Mức Đọc Hiểu</div>
+
+      <!-- C1 -->
+      <div class="lesson" id="l1c1">
+        <div class="lesson-toggle" onclick="toggle(this)">
+          <div class="lesson-num">C1</div>
+          <div class="lesson-info">
+            <div class="lesson-title">Node.js là gì và tại sao cần biết?</div>
+            <div class="lesson-type">Khái niệm nền</div>
+          </div>
+          <div class="lesson-chevron">▼</div>
+        </div>
+        <div class="lesson-body">
+          <div class="analogy-box"><span>Analogy cho designer</span>JavaScript trong trình duyệt như Figma chạy trên máy bạn. Node.js như Figma chạy trên server — cùng ngôn ngữ thiết kế nhưng môi trường khác, dùng được cho tác vụ khác.</div>
+
+          <div class="diagram">
+            <div class="diagram-label">JavaScript — Browser vs Node.js</div>
+            <svg viewBox="0 0 700 150" xmlns="http://www.w3.org/2000/svg">
+              <rect x="30" y="20" width="290" height="110" rx="8" fill="#1C1C28" stroke="#2A2A3C" stroke-width="1"/>
+              <text x="175" y="44" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#8888A0">BROWSER</text>
+              <rect x="50" y="54" width="250" height="60" rx="6" fill="#0E0E18" stroke="#3B3B4F" stroke-width="1"/>
+              <text x="175" y="76" text-anchor="middle" font-family="Inter" font-size="12" fill="#F0EEE8">JavaScript</text>
+              <text x="175" y="96" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#7FD99B">DOM · animation · UI event</text>
+              <text x="175" y="113" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#8888A0">chạy trong Chrome/Safari</text>
+
+              <text x="350" y="85" text-anchor="middle" font-family="JetBrains Mono" font-size="20" fill="#3B3B4F">+</text>
+
+              <rect x="380" y="20" width="290" height="110" rx="8" fill="#1C1C28" stroke="#7FD99B" stroke-width="1" opacity=".6"/>
+              <text x="525" y="44" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#7FD99B">NODE.JS</text>
+              <rect x="400" y="54" width="250" height="60" rx="6" fill="#0E0E18" stroke="#3B3B4F" stroke-width="1"/>
+              <text x="525" y="76" text-anchor="middle" font-family="Inter" font-size="12" fill="#F0EEE8">JavaScript</text>
+              <text x="525" y="96" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#7FD99B">npm · file system · server</text>
+              <text x="525" y="113" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#8888A0">chạy ngoài browser</text>
+            </svg>
+          </div>
+
+          <div class="section-label">Nội dung chính</div>
+          <ul class="concept-list">
+            <li>JavaScript ban đầu chỉ chạy trong trình duyệt. Node.js cho phép JavaScript chạy trên server, ngoài trình duyệt.</li>
+            <li>Gần như toàn bộ tool frontend hiện đại (Next.js, Vite, Tailwind CLI) đều chạy trên Node.js.</li>
+            <li>Bạn cần Node.js cài trên máy để chạy <code>npm install</code>, <code>npm run dev</code>.</li>
+            <li><strong>Runtime</strong> = môi trường thực thi code. Node.js là runtime của JavaScript ngoài browser.</li>
+            <li>Khi bạn đóng terminal, dev server chết vì process bị tắt — đó là lý do cần deploy lên Vercel để chạy 24/7.</li>
+          </ul>
+
+          <div class="skip-box"><strong>Bỏ qua được</strong>Event loop, non-blocking I/O, viết server Node.js từ đầu.</div>
+          <div class="sources">
+            <a href="https://www.educative.io/blog/what-is-nodejs" target="_blank">Educative — What is Node.js?</a>
+            <a href="https://www.digitalocean.com/community/tutorials/how-to-use-node-js-modules-with-npm-and-package-json" target="_blank">DigitalOcean — How to use Node.js modules with npm</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- C2 -->
+      <div class="lesson" id="l1c2">
+        <div class="lesson-toggle" onclick="toggle(this)">
+          <div class="lesson-num">C2</div>
+          <div class="lesson-info">
+            <div class="lesson-title">package.json là gì?</div>
+            <div class="lesson-type">Thực hành đọc hiểu</div>
+          </div>
+          <div class="lesson-chevron">▼</div>
+        </div>
+        <div class="lesson-body">
+          <div class="analogy-box"><span>Analogy cho designer</span>package.json như file manifest.json của Figma Plugin — khai báo tên, version, dependencies, và các lệnh có thể chạy. Mở file này ra là biết project đang dùng gì.</div>
+
+          <div class="section-label">Ví dụ đọc hiểu</div>
+          <pre><span class="c">{</span>
+  <span class="k">"name"</span>: <span class="s">"cynapze"</span>,
+  <span class="k">"scripts"</span>: {
+    <span class="k">"dev"</span>:   <span class="s">"next dev"</span>,     <span class="c">← npm run dev   → chạy dev server</span>
+    <span class="k">"build"</span>: <span class="s">"next build"</span>,  <span class="c">← npm run build → build production</span>
+    <span class="k">"start"</span>: <span class="s">"next start"</span>   <span class="c">← npm run start → chạy sau khi build</span>
+  },
+  <span class="k">"dependencies"</span>: {
+    <span class="k">"next"</span>:  <span class="s">"15.0.0"</span>,       <span class="c">← Next.js version 15</span>
+    <span class="k">"react"</span>: <span class="s">"^19.0.0"</span>      <span class="c">← React v19 trở lên</span>
+  },
+  <span class="k">"devDependencies"</span>: {
+    <span class="k">"tailwindcss"</span>: <span class="s">"^4.0"</span>  <span class="c">← chỉ dùng khi dev</span>
+  }
+<span class="c">}</span></pre>
+
+          <div class="section-label">Nội dung chính</div>
+          <ul class="concept-list">
+            <li><code>scripts</code> = lệnh shortcut. <code>npm run dev</code> chạy lệnh tương ứng trong scripts.</li>
+            <li><code>dependencies</code> = packages cần thiết để app chạy trên production.</li>
+            <li><code>devDependencies</code> = packages chỉ cần khi dev, không cần trên production.</li>
+            <li><code>npm install</code> đọc file này và tải tất cả packages xuống <code>node_modules/</code>.</li>
+            <li>Claude Code tự cập nhật <code>package.json</code> và chạy install khi thêm package mới.</li>
+          </ul>
+
+          <div class="skip-box"><strong>Bỏ qua được</strong>Semantic versioning chi tiết, peerDependencies, publish package lên npm.</div>
+          <div class="sources">
+            <a href="https://www.geeksforgeeks.org/node-js/node-js-package-json/" target="_blank">GeeksforGeeks — Node.js package.json</a>
+            <a href="https://nodesource.com/blog/the-basics-of-package-json" target="_blank">NodeSource — The Basics of package.json</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LỚP 2 -->
+  <div class="layer-section">
+    <div class="layer-header">
+      <div class="layer-badge l2">Lớp 2</div>
+      <div class="layer-title">Có thì hiểu sâu hơn</div>
+    </div>
+    <p class="layer-desc">Học song song khi gặp trong thực tế — không cần học trước. Giúp hiểu DevOps rõ hơn nhưng không chặn bạn bắt đầu.</p>
+
+    <!-- MODULE D -->
+    <div class="module">
+      <div class="module-label">Module D — Networking Cơ Bản</div>
+
+      <!-- D1 -->
+      <div class="lesson" id="l2d1">
+        <div class="lesson-toggle" onclick="toggle(this)">
+          <div class="lesson-num">D1</div>
+          <div class="lesson-info">
+            <div class="lesson-title">Domain hoạt động khi deploy như thế nào?</div>
+            <div class="lesson-type">Khái niệm mở rộng</div>
+          </div>
+          <div class="lesson-chevron">▼</div>
+        </div>
+        <div class="lesson-body">
+          <div class="analogy-box"><span>Analogy cho designer</span>Mua domain như mua tên thương hiệu. Trỏ DNS về Vercel như đặt biển tên thương hiệu trước cửa hàng của Vercel. Khách chỉ cần nhớ tên thương hiệu, không cần nhớ địa chỉ thật.</div>
+
+          <div class="diagram">
+            <div class="diagram-label">Flow — Mua domain → Deploy → Trỏ DNS</div>
+            <svg viewBox="0 0 700 120" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arr4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                  <path d="M1 1L9 5L1 9" fill="none" stroke="#7FD99B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </marker>
+              </defs>
+              <rect x="20" y="35" width="140" height="50" rx="6" fill="#1C1C28" stroke="#2A2A3C"/>
+              <text x="90" y="56" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#8888A0">1. MUA DOMAIN</text>
+              <text x="90" y="74" text-anchor="middle" font-family="Inter" font-size="11" fill="#F0EEE8">Namecheap</text>
+
+              <line x1="162" y1="60" x2="198" y2="60" stroke="#7FD99B" stroke-width="1.5" marker-end="url(#arr4)"/>
+
+              <rect x="200" y="35" width="140" height="50" rx="6" fill="#1C1C28" stroke="#2A2A3C"/>
+              <text x="270" y="56" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#8888A0">2. DEPLOY</text>
+              <text x="270" y="74" text-anchor="middle" font-family="Inter" font-size="11" fill="#F0EEE8">Vercel</text>
+
+              <line x1="342" y1="60" x2="378" y2="60" stroke="#7FD99B" stroke-width="1.5" marker-end="url(#arr4)"/>
+
+              <rect x="380" y="35" width="160" height="50" rx="6" fill="#1C1C28" stroke="#2A2A3C"/>
+              <text x="460" y="52" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#8888A0">3. THÊM DNS RECORD</text>
+              <text x="460" y="70" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#C8A87A">CNAME → vercel-dns</text>
+
+              <line x1="542" y1="60" x2="578" y2="60" stroke="#7FD99B" stroke-width="1.5" marker-end="url(#arr4)"/>
+
+              <rect x="580" y="35" width="100" height="50" rx="6" fill="#1C1C28" stroke="#7FD99B"/>
+              <text x="630" y="56" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#7FD99B">LIVE ✓</text>
+              <text x="630" y="74" text-anchor="middle" font-family="Inter" font-size="11" fill="#F0EEE8">mysite.com</text>
+            </svg>
+          </div>
+
+          <div class="section-label">Nội dung chính</div>
+          <ul class="concept-list">
+            <li><strong>A record</strong> = trỏ domain → IP address cụ thể.</li>
+            <li><strong>CNAME record</strong> = trỏ domain → domain khác (Vercel dùng cách này).</li>
+            <li>DNS propagation = thời gian để thay đổi lan ra toàn cầu — thường 5 phút đến 48 giờ.</li>
+            <li>Subdomain (<code>app.mysite.com</code>) cần DNS record riêng — Vercel tự tạo khi bạn thêm custom domain.</li>
+          </ul>
+
+          <div class="sources">
+            <a href="https://www.freecodecamp.org/news/what-is-localhost/" target="_blank">freeCodeCamp — What is Localhost?</a>
+            <a href="https://www.cloudns.net/blog/understanding-localhost-the-basics-of-127-0-0-1-explained/" target="_blank">ClouDNS — Understanding Localhost & DNS</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- D2 -->
+      <div class="lesson" id="l2d2">
+        <div class="lesson-toggle" onclick="toggle(this)">
+          <div class="lesson-num">D2</div>
+          <div class="lesson-info">
+            <div class="lesson-title">Process, Runtime và tại sao app cần "chạy"?</div>
+            <div class="lesson-type">Khái niệm mở rộng</div>
+          </div>
+          <div class="lesson-chevron">▼</div>
+        </div>
+        <div class="lesson-body">
+          <div class="analogy-box"><span>Analogy cho designer</span>File Figma không tự mở — bạn phải bấm "Open". App web cũng vậy — cần có process đang chạy mới serve được trang. Static site = file PDF đã export — không cần Figma mở mới đọc được.</div>
+
+          <div class="diagram">
+            <div class="diagram-label">Static site vs Server-side app</div>
+            <svg viewBox="0 0 700 140" xmlns="http://www.w3.org/2000/svg">
+              <rect x="20" y="20" width="300" height="100" rx="8" fill="#1C1C28" stroke="#2A2A3C"/>
+              <text x="170" y="44" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#8888A0">STATIC SITE</text>
+              <text x="170" y="70" text-anchor="middle" font-family="Inter" font-size="12" fill="#F0EEE8">HTML + CSS + JS đã build sẵn</text>
+              <text x="170" y="90" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#7FD99B">Không cần process chạy</text>
+              <text x="170" y="110" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#8888A0">Rẻ · Nhanh · Vercel serve file</text>
+
+              <rect x="380" y="20" width="300" height="100" rx="8" fill="#1C1C28" stroke="#C8A87A" stroke-opacity=".4"/>
+              <text x="530" y="44" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#C8A87A">SERVER-SIDE APP</text>
+              <text x="530" y="70" text-anchor="middle" font-family="Inter" font-size="12" fill="#F0EEE8">Next.js SSR · API routes</text>
+              <text x="530" y="90" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#C8A87A">Cần process / serverless fn</text>
+              <text x="530" y="110" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#8888A0">Linh hoạt · Tốn tiền hơn</text>
+            </svg>
+          </div>
+
+          <div class="section-label">Nội dung chính</div>
+          <ul class="concept-list">
+            <li><strong>Process</strong> = một chương trình đang thực thi trong bộ nhớ. <code>npm run dev</code> tạo ra 1 process.</li>
+            <li>Khi bạn đóng terminal → process chết → <code>localhost:3000</code> không còn respond.</li>
+            <li>Vercel giữ process chạy 24/7 — hoặc dùng serverless (bật khi có request, tắt sau đó).</li>
+            <li><strong>Cold start</strong> = lần đầu gọi serverless hơi chậm vì cần "khởi động" — các lần sau nhanh hơn.</li>
+          </ul>
+
+          <div class="skip-box"><strong>Bỏ qua được</strong>Thread, memory management, process manager (PM2), daemon.</div>
+          <div class="sources">
+            <a href="https://www.infoworld.com/article/2254485/what-is-nodejs-javascript-runtime-explained.html" target="_blank">InfoWorld — What is Node.js? The JavaScript runtime explained</a>
+            <a href="https://cloudinary.com/blog/questions/what-is-the-node-js-runtime-for-javascript" target="_blank">Cloudinary — What is the Node.js runtime?</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid var(--border); padding-top:24px; margin-top:16px; display:flex; justify-content:space-between; align-items:center;">
+    <span style="font-family:var(--mono); font-size:11px; color:var(--muted)">2 lớp · 4 modules · 8 bài học · Cập nhật 06/2026</span>
+    <a href="https://app.notion.com/p/38497731694981b4ad55cf1062c14684" style="font-family:var(--mono); font-size:11px; color:var(--green); text-decoration:none;">Tiếp theo → DevOps 101 ↗</a>
+  </div>
+</main>
+
+<script>
+function toggle(el) {
+  const lesson = el.closest('.lesson');
+  lesson.classList.toggle('open');
+  // update nav active
+  const id = lesson.id;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navItem = document.querySelector(`.nav-item[onclick="scrollTo('${id}')"]`);
+  if (navItem) navItem.classList.add('active');
+}
+function scrollTo(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!el.classList.contains('open')) {
+      el.querySelector('.lesson-toggle').click();
+    }
+  }
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+}
+</script>
+</body>
+</html>
